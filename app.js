@@ -1,6 +1,21 @@
 var express = require('express');
 
 var app = express();
+var sql = require('mssql');
+var config = {
+  user: 'SA',
+  password: 'password1',
+  server: 'localhost',
+  database: 'pslibrary',
+  "options": {
+    "encrypt": true,
+    "enableArithAbort": true
+    }
+  }
+
+sql.connect(config, err => {
+    if (err) console.log(err);
+});
 
 var port = process.env.PORT || 5000;
 var nav = [{
