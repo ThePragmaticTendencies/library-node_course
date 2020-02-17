@@ -34,24 +34,41 @@ var router = nav => {
   bookRouter.route('/')
     .get((req, res) => {
       var request = new sql.Request();
-      request.query('select * from books', (err, recordset) => {
-          if (err) console.log(err)
-          console.log(recordset);
-      });
-      res.render('bookListView', {
-        title: 'Hello from render',
-        nav: nav,
-        books: books
+      request.query('select * from books', (err, recordsets) => {
+          console.log(recordsets.recordset);
+          res.render('bookListView', {
+            title: 'Hello from render',
+            nav: nav,
+            books: recordsets.recordset
+          });
       });
     });
 
   bookRouter.route('/:id')
-    .get((req, res) => {
+    .all((req, res, next) => {
       var id = req.params.id;
+      var ps = new sql.PreparedStatement();
+      ps.input('id', sql.Int);
+      ps.prepare('select * from books where id= @id',
+        err => {
+          ps.execute({
+              id: req.params.id
+            }, (err, recordsets) => {
+              if (!recordsets.recordset || recordsets.recordset.length === 0)
+              {
+                res.status(404).send('Not Found');
+              } else {
+                req.book = recordsets.recordset[0];
+                next();
+              }
+            });
+        });
+    })
+    .get((req, res) => {
       res.render('bookView', {
         title: 'Book',
         nav: nav,
-        book: books[id]
+        book: req.book
       });
     });
     return bookRouter;
